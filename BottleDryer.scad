@@ -22,13 +22,30 @@ support_height = 20; // [10:1:100]
 /* [Hidden] */
 epsilon = 0.001;
 
+module gate(size, pointiness=0) {
+    top = [size[0] / 2, size[1]];
+    c = top / 2;
+    d = [c[1], -c[0]] / norm(c);
+    min_x = max(c[0] / d[0], -c[1] / d[1]);
+    m = c + d * (min_x + pointiness);
+    r = norm(m);
+    right(top[0])
+    mirror_copy([1, 0])
+    left(top[0])
+    intersection() {
+        translate(m)
+            circle(r);
+        square([size[0]/2, size[1]]);
+    }
+}
+
 module stand() {
     bottleneck_radius = bottleneck_diameter / 2;
     pipe_radius = bottleneck_diameter / 3;
     difference() {
         union() {
-            down(support_height)
             cylinder(bottle_height + support_height, pipe_radius, pipe_radius);
+            up(support_height)
             intersection() {
                 for (phi = [360/(support_count*2):360/support_count:360-epsilon]) {
                     rotate(phi)
@@ -43,23 +60,30 @@ module stand() {
                             }
                             square([bottleneck_radius, bottleneck_length]);
                         }
-                    }
-                    cylinder(bottleneck_length + bottleneck_radius, bottleneck_radius, bottleneck_diameter/2);
                 }
+                cylinder(bottleneck_length + bottleneck_radius, bottleneck_radius, bottleneck_diameter/2);
+            }
 
-                down(support_height)
+            intersection() {
                 for (phi = [360/(support_count*2):360/support_count:360-epsilon]) {
                     rotate(phi)
                     back(support_thickness/2)
                     xrot(90)
                     linear_extrude(support_thickness)
-                        scale([support_diameter/2, support_height])
-                        square(1);
+                        difference() {
+                            square([support_diameter/2, support_height]);
+                            right(bottleneck_radius)
+                            gate([support_diameter / 2 - bottleneck_radius * 2 + pipe_radius, support_height/1.5], pipe_radius);
+                        }
                 }
+                cylinder(support_height, support_diameter/2, support_diameter/2);
             }
+        }
         down(support_height - stand_wall_thickness)
         cylinder(bottle_height + support_height, pipe_radius - stand_wall_thickness, pipe_radius - stand_wall_thickness);
     }
+    cylinder(stand_wall_thickness, support_diameter/2, support_diameter/2);
+    translate([0,0,-support_height]);
 }
-color("#0DDE")
+color("#0DD")
 stand();
