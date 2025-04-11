@@ -3,13 +3,13 @@ include <scad-utils/morphology.scad>
 
 /* [General] */
 // Resolution (Number of edges in a circle)
-$fn = 0;
+$fn = 200;
 // The part to be printed
 part = "MAIN";  // [ALL:"All Together (Not printable!)", MAIN:"Stand", CAP:"Cap to block air"]
 // Thickness of all air flow walls
-wall_thickness = 1.2;  // [0.1:0.01:5]
+wall_thickness = 1.25;  // [0.1:0.01:5]
 // Thickness of the floor
-base_thickness = 2;  // [0.1:0.1:5]
+base_thickness = 1.4;  // [0.1:0.1:5]
 
 stand_count = 5;  // [1:1:10]
 // The maximal bottle diameter
@@ -202,14 +202,13 @@ module stand(feed_length = 100) {
           cylinder(base_thickness + bank_height,
                    r = support_radius + wall_thickness * 2);
           cylinder(base_thickness + bank_height + epsilon,
-                   r = support_radius - (bank_height) / 2);
+                   r = support_radius + wall_thickness - bank_height);
           up(base_thickness + bank_height) rotate_extrude()
-              right(support_radius - wall_thickness - bank_height / 2)
+              right(support_radius + wall_thickness - bank_height)
                   circle(bank_height);
         }
-        up(base_thickness + bank_height) rotate_extrude()
-            right(support_radius + wall_thickness * 1.5)
-                circle(wall_thickness / 2);
+#up(base_thickness + bank_height) rotate_extrude()
+        right(support_radius + wall_thickness * 1.5) circle(wall_thickness / 2);
       }
     }
     // Air flow
@@ -224,7 +223,7 @@ module stand(feed_length = 100) {
     }
   }
   // Air direction
-  up(base_thickness) difference() {
+  up(base_thickness - wall_thickness) difference() {
     intersection() {
       cylinder(feed_radius, r = feed_radius);
       translate([ -feed_width, -feed_radius ])
