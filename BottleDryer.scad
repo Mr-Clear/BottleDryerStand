@@ -1,41 +1,45 @@
 include <BOSL2/std.scad>
 include <scad-utils/morphology.scad>
 
-// Resolution (higer is better)
+/* [General] */
+// Resolution (Number of edges in a circle)
 $fn = 0;
 // The part to be printed
-part = "MAIN";  // [ALL:"All (Not printable!)", MAIN:"Main Stand", CAP:"Cap to block air"]
+part = "MAIN";  // [ALL:"All Together (Not printable!)", MAIN:"Stand", CAP:"Cap to block air"]
 // Thickness of all air flow walls
-wall_thickness = 1;  // [0.1:0.01:5]
-// Space between seperate printed parts to fit together
-print_accuracy = 0.1;  // [-1:0.01:2]
+wall_thickness = 1.2;  // [0.1:0.01:5]
 
-stand_count = 4;  // [1:1:10]
+stand_count = 5;  // [1:1:10]
 // The maximal bottle diameter
 stand_distance = 100;  // [20:1:1000]
 
 /* [Fan] */
 // Fan diameter
-fan_diameter = 40;  // [40, 50, 60, 70, 80]
+fan_diameter = 40;  // [40, 50, 60, 70, 80, 92, 120, 140, 200, 220]
 // Thickness of the plate where the fan is mounted. Determines the screw hole
 // length
 fan_plate_thickness = 2;  // [0.1:0.01:5]
 // Screw diameter
-fan_screw_diameter = 3;  // [1:0.1:10]
+fan_screw_diameter = 3.5;  // [1:0.01:10]
 
 /* [Bottle Stand] */
 // Maximum inner height of a bottle
-bottle_height = 200;  // [10:1:1000]
+bottle_height = 150;  // [10:1:1000]
 // Inner diameter of a bottle
 bottleneck_diameter = 17;  // [1:0.1:100]
 // Length of the bottle neck
 bottleneck_length = 30;  // [1:1:100]
 
-support_thickness = 2;  // [0.1:0.01:5]
+support_thickness = 1.6;  // [0.1:0.01:5]
 support_count = 5;      // [3,4,5,6,7,8,9]
 // Maximal diameter of the bottle neck
 support_diameter = 50;  // [10:1:100]
-support_height = 20;    // [10:1:100]
+support_height = 15;    // [10:1:100]
+
+/* [Cap] */
+cap_height = 10;  // [0:0.1:20]
+// Space between seperate printed parts to fit together
+print_accuracy = 0.1;  // [-1:0.01:2]
 
 /* [Hidden] */
 epsilon = 0.001;
@@ -199,13 +203,30 @@ module main_part() {
   }
 }
 
-module cap() {}
+module cap() {
+  union() {
+    difference() {
+      cylinder(cap_height + wall_thickness, r = pipe_radius + wall_thickness);
+      up(wall_thickness)
+          cylinder(cap_height + epsilon, r = pipe_radius + print_accuracy);
+    }
+    cylinder(cap_height + wall_thickness,
+             r = pipe_radius - wall_thickness - print_accuracy);
+  }
+}
 
 if (part == "ALL") {
   main_part();
+  for (i = [0:stand_count - 1]) {
+    rotate(i * 360 / stand_count) translate([ feed_length, 0, 0 ])
+        rotate([ 0, 0, 180 ])
+            up(bottle_height + support_height + wall_thickness + cap_height * 2)
+                rotate([ 0, 180 ]) cap();
+  }
 } else if (part == "MAIN") {
   main_part();
 } else if (part == "CAP") {
+  cap();
 } else {
   echo("Unknown part: ", part);
 }
