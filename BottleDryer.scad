@@ -1,5 +1,3 @@
-include <scad-utils/morphology.scad>
-
 /* [General] */
 // Resolution (Number of edges in a circle)
 $fn = 200;
@@ -109,7 +107,7 @@ module main_part() {
         // Common Base
         if (base_type == "COMMON") {
           linear_extrude(base_thickness) common_base();
-          linear_extrude(base_thickness + bank_height) shell(wall_thickness)
+          linear_extrude(base_thickness + bank_height) contour(wall_thickness)
               common_base();
         }
       }
@@ -247,7 +245,7 @@ module cap() {
 }
 
 module common_base() {
-  conv_hull() union() {
+  hull() union() {
     for (i = [0:stand_count - 1]) {
       rotate(i * 360 / stand_count) translate([ feed_length, 0, 0 ])
           circle(r = support_radius + wall_thickness * 2);
@@ -283,4 +281,14 @@ module right(x) { translate([ x, 0, 0 ]) children(); }
 module mirror_copy(vec) {
   children();
   mirror(vec) children();
+}
+
+module contour(d) {
+  difference() {
+    minkowski() {
+      circle(r = d);
+      children();
+    }
+    children();
+  }
 }
