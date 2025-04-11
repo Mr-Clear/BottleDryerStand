@@ -46,7 +46,8 @@ epsilon = 0.001;
 feed_length =
     max(stand_distance * stand_count / (2 * PI),
         (fan_diameter * sqrt(2) + support_diameter) / 2 + wall_thickness * 2);
-
+support_radius = support_diameter / 2;
+bank_height = support_height / 3;
 bottleneck_radius = bottleneck_diameter / 2;
 pipe_radius = bottleneck_diameter / 3;
 feed_width = (pipe_radius - wall_thickness) * 2;
@@ -134,6 +135,8 @@ module stand(feed_length = 100) {
     union() {
       // The pipe
       cylinder(bottle_height + support_height, r = pipe_radius);
+      up(bottle_height + support_height) rotate_extrude()
+          right(pipe_radius - wall_thickness / 2) circle(wall_thickness / 2);
       // Bottle neck spacers
       up(support_height) {
         intersection() {
@@ -159,15 +162,15 @@ module stand(feed_length = 100) {
                  support_count:360 - epsilon]) {
           rotate(phi) back(support_thickness / 2) xrot(90)
               linear_extrude(support_thickness) difference() {
-            square([ support_diameter / 2, support_height ]);
+            square([ support_radius, support_height ]);
             right(bottleneck_radius) gate([
-              support_diameter / 2 - bottleneck_radius * 2 + pipe_radius -
+              support_radius - bottleneck_radius * 2 + pipe_radius -
                   wall_thickness,
               support_height / 1.5
             ]);
           }
         }
-        cylinder(support_height, r = support_diameter / 2);
+        cylinder(support_height, r = support_radius);
       }
 
       // Feed shell
@@ -178,12 +181,17 @@ module stand(feed_length = 100) {
           ]);
 
       // Base
-      cylinder(wall_thickness, r = support_diameter / 2);
+      cylinder(wall_thickness, r = support_radius + wall_thickness * 2);
       difference() {
-        cylinder(support_height / 4, r = support_diameter / 2);
-        cylinder(support_height / 4 + epsilon,
-                 r = support_diameter / 2 - wall_thickness);
+        cylinder(bank_height, r = support_radius + wall_thickness * 2);
+        cylinder(bank_height + epsilon,
+                 r = support_radius + wall_thickness - bank_height / 2);
+        up(wall_thickness + bank_height / 2) rotate_extrude()
+            right(support_radius - wall_thickness) circle(bank_height / 2);
       }
+      up(bank_height) rotate_extrude()
+          right(support_radius + wall_thickness * 1.5)
+              circle(wall_thickness / 2);
     }
     // Air flow
     up(wall_thickness) {
