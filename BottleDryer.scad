@@ -1,18 +1,19 @@
 /* [General] */
 // Resolution (Number of edges in a circle)
 $fn = 200;
-// The part to be printed
+// The model to be rendered
 part = "MAIN";  // [ALL:"All Together (Not printable!)", MAIN:"Stand", CAP:"Cap to block air"]
 // Thickness of all air flow walls
 wall_thickness = 1.25;  // [0.1:0.01:5]
 // Thickness of the floor
 base_thickness = 1.4;  // [0.1:0.1:5]
 
+// Number of arms
 stand_count = 5;  // [1:1:10]
-// The maximal bottle diameter
+// The maximal bottle diameter, used to calculate spacing between stands
 stand_distance = 100;  // [20:1:1000]
 
-// Base type
+// Separate base for each stand or a common base for all stands
 base_type = "SEPARATE";  // [SEPARATE:"Separate base for every stand", COMMON:"Common base for all stands"]
 
 /* [Fan] */
@@ -20,24 +21,28 @@ base_type = "SEPARATE";  // [SEPARATE:"Separate base for every stand", COMMON:"C
 fan_diameter = 40;  // [40, 50, 60, 70, 80, 92, 120, 140, 200, 220]
 // Thickness of the plate where the fan is mounted. Determines the screw hole length
 fan_plate_thickness = 2;  // [0.1:0.01:5]
-// Screw diameter
+// Screw diameter for mounting the fan
 fan_screw_diameter = 3.5;  // [1:0.01:10]
 
 /* [Bottle Stand] */
 // Maximum inner height of a bottle
 bottle_height = 150;  // [10:1:1000]
-// Inner diameter of a bottle
+// Inner diameter of the bottle neck
 bottleneck_diameter = 17;  // [1:0.1:100]
 // Length of the bottle neck
 bottleneck_length = 30;  // [1:1:100]
 
+// Thickness of the supports holding the bottle
 support_thickness = 1.6;  // [0.1:0.01:5]
-support_count = 5;        // [3,4,5,6,7,8,9]
-// Maximal diameter of the bottle neck
+// Number of supports holding the bottle
+support_count = 5;  // [3,4,5,6,7,8,9]
+// Maximal diameter of the bottle opening
 support_diameter = 50;  // [10:1:100]
-support_height = 15;    // [10:1:100]
+// Height of the support structure
+support_height = 15;  // [10:1:100]
 
 /* [Cap] */
+// Height of the cap used to block airflow
 cap_height = 10;  // [0:0.1:20]
 // Space between separate printed parts to fit together
 print_accuracy = 0.1;  // [-1:0.01:2]
@@ -58,7 +63,7 @@ flow_gate_height = min(feed_width, support_height - wall_thickness * 2);
 fan_box_height = base_thickness + flow_gate_height + wall_thickness * 2;
 fan_box_top = fan_box_height + fan_plate_thickness;
 fan_radius = fan_diameter / 2;
-
+// https://en.wikipedia.org/wiki/Computer_fan#Dimensions
 fan_screw_distance_table = [
   [ 40, 32 ], [ 50, 40 ], [ 60, 50 ], [ 70, 60 ], [ 80, 71.5 ], [ 92, 82.5 ],
   [ 120, 105 ], [ 140, 124.5 ], [ 200, 154 ], [ 220, 170 ]
@@ -68,6 +73,7 @@ fan_screw_radius = lookup(fan_diameter, fan_screw_distance_table) / sqrt(2);
 main();
 
 module main() {
+  color("#08F")
   if (part == "ALL") {
     main_part();
     for (i = [0:stand_count - 1]) {
