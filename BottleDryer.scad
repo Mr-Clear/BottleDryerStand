@@ -16,8 +16,7 @@ stand_distance = 100;  // [20:1:1000]
 /* [Fan] */
 // Fan diameter
 fan_diameter = 40;  // [40, 50, 60, 70, 80, 92, 120, 140, 200, 220]
-// Thickness of the plate where the fan is mounted. Determines the screw hole
-// length
+// Thickness of the plate where the fan is mounted. Determines the screw hole length
 fan_plate_thickness = 2;  // [0.1:0.01:5]
 // Screw diameter
 fan_screw_diameter = 3.5;  // [1:0.01:10]
@@ -31,7 +30,7 @@ bottleneck_diameter = 17;  // [1:0.1:100]
 bottleneck_length = 30;  // [1:1:100]
 
 support_thickness = 1.6;  // [0.1:0.01:5]
-support_count = 5;      // [3,4,5,6,7,8,9]
+support_count = 5;        // [3,4,5,6,7,8,9]
 // Maximal diameter of the bottle neck
 support_diameter = 50;  // [10:1:100]
 support_height = 15;    // [10:1:100]
@@ -63,17 +62,70 @@ fan_screw_distance_table = [
 ];
 fan_screw_radius = lookup(fan_diameter, fan_screw_distance_table) / sqrt(2);
 
-// Creates a pointed arch.
-module gate(size, pointiness = 0) {
-  top = [ size[0] / 2, size[1] ];
-  c = top / 2;
-  d = [ c[1], -c[0] ] / norm(c);
-  min_x = max(c[0] / d[0], -c[1] / d[1]);
-  m = c + d * (min_x + pointiness);
-  r = norm(m);
-  right(top[0]) mirror_copy([ 1, 0 ]) left(top[0]) intersection() {
-    translate(m) circle(r);
-    square([ size[0] / 2, size[1] ]);
+main();
+
+module main() {
+  if (part == "ALL") {
+    main_part();
+    for (i = [0:stand_count - 1]) {
+      rotate(i * 360 / stand_count) translate([ feed_length, 0, 0 ])
+          rotate([ 0, 0, 180 ]) up(bottle_height + support_height +
+                                   wall_thickness + cap_height * 2)
+              rotate([ 0, 180 ]) cap();
+    }
+  } else if (part == "MAIN") {
+    main_part();
+  } else if (part == "CAP") {
+    cap();
+  } else {
+    echo("Unknown part: ", part);
+  }
+}
+
+module main_part() {
+  union() {
+    difference() {
+      union() {
+        // Stands
+        for (i = [0:stand_count - 1]) {
+          rotate(i * 360 / stand_count) translate([ feed_length, 0, 0 ])
+              rotate([ 0, 0, 180 ]) stand(feed_length);
+        }
+        // Fan Box
+        cylinder(fan_box_top, r = fan_radius);
+        intersection() {
+          translate(-[ fan_radius, fan_radius, 0 ]) cube([
+            fan_diameter, fan_diameter, wall_thickness + fan_box_height +
+            fan_plate_thickness
+          ]);
+
+          cylinder(fan_box_top, fan_radius, (fan_radius)*sqrt(2));
+        }
+      }
+      // Air flow
+      up(wall_thickness) {
+        cylinder(fan_box_top + epsilon, r = fan_radius - wall_thickness);
+
+        for (i = [0:stand_count - 1]) {
+          rotate(i * 360 / stand_count) {
+            fwd(feed_radius) rotate([ 90, 0, 90 ])
+                linear_extrude(fan_diameter + epsilon)
+                    gate([ feed_width, flow_gate_height ]);
+          }
+        }
+      }
+      // Screw holes
+      up(fan_box_top - fan_plate_thickness + epsilon) for (phi = [45:90:360]) {
+        zrot(phi) translate([ fan_screw_radius, 0, 0 ])
+            cylinder(fan_plate_thickness, r = fan_screw_diameter / 2);
+      }
+    }
+    // Air direction
+    up(wall_thickness) difference() {
+      cylinder(fan_box_height, r = fan_radius - epsilon);
+      rotate_extrude() translate([ fan_radius + epsilon, fan_box_height, 0 ])
+          scale([ 1, fan_box_height / fan_radius ]) circle(fan_radius);
+    }
   }
 }
 
@@ -156,53 +208,6 @@ module stand(feed_length = 100) {
   }
 }
 
-module main_part() {
-  union() {
-    difference() {
-      union() {
-        // Stands
-        for (i = [0:stand_count - 1]) {
-          rotate(i * 360 / stand_count) translate([ feed_length, 0, 0 ])
-              rotate([ 0, 0, 180 ]) stand(feed_length);
-        }
-        // Fan Box
-        cylinder(fan_box_top, r = fan_radius);
-        intersection() {
-          translate(-[ fan_radius, fan_radius, 0 ]) cube([
-            fan_diameter, fan_diameter, wall_thickness + fan_box_height +
-            fan_plate_thickness
-          ]);
-
-          cylinder(fan_box_top, fan_radius, (fan_radius)*sqrt(2));
-        }
-      }
-      // Air flow
-      up(wall_thickness) {
-        cylinder(fan_box_top + epsilon, r = fan_radius - wall_thickness);
-
-        for (i = [0:stand_count - 1]) {
-          rotate(i * 360 / stand_count) {
-            fwd(feed_radius) rotate([ 90, 0, 90 ])
-                linear_extrude(fan_diameter + epsilon)
-                    gate([ feed_width, flow_gate_height ]);
-          }
-        }
-      }
-      // Screw holes
-      up(fan_box_top - fan_plate_thickness + epsilon) for (phi = [45:90:360]) {
-        zrot(phi) translate([ fan_screw_radius, 0, 0 ])
-            cylinder(fan_plate_thickness, r = fan_screw_diameter / 2);
-      }
-    }
-    // Air direction
-    up(wall_thickness) difference() {
-      cylinder(fan_box_height, r = fan_radius - epsilon);
-      rotate_extrude() translate([ fan_radius + epsilon, fan_box_height, 0 ])
-          scale([ 1, fan_box_height / fan_radius ]) circle(fan_radius);
-    }
-  }
-}
-
 module cap() {
   union() {
     difference() {
@@ -215,18 +220,16 @@ module cap() {
   }
 }
 
-if (part == "ALL") {
-  main_part();
-  for (i = [0:stand_count - 1]) {
-    rotate(i * 360 / stand_count) translate([ feed_length, 0, 0 ])
-        rotate([ 0, 0, 180 ])
-            up(bottle_height + support_height + wall_thickness + cap_height * 2)
-                rotate([ 0, 180 ]) cap();
+// Creates a pointed arch.
+module gate(size, pointiness = 0) {
+  top = [ size[0] / 2, size[1] ];
+  c = top / 2;
+  d = [ c[1], -c[0] ] / norm(c);
+  min_x = max(c[0] / d[0], -c[1] / d[1]);
+  m = c + d * (min_x + pointiness);
+  r = norm(m);
+  right(top[0]) mirror_copy([ 1, 0 ]) left(top[0]) intersection() {
+    translate(m) circle(r);
+    square([ size[0] / 2, size[1] ]);
   }
-} else if (part == "MAIN") {
-  main_part();
-} else if (part == "CAP") {
-  cap();
-} else {
-  echo("Unknown part: ", part);
 }
