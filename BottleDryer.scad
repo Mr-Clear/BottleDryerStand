@@ -8,13 +8,15 @@ $fn = 0;
 part = "MAIN";  // [ALL:"All Together (Not printable!)", MAIN:"Stand", CAP:"Cap to block air"]
 // Thickness of all air flow walls
 wall_thickness = 1.2;  // [0.1:0.01:5]
+// Thickness of the floor
+base_thickness = 2;  // [0.1:0.1:5]
 
 stand_count = 5;  // [1:1:10]
 // The maximal bottle diameter
 stand_distance = 100;  // [20:1:1000]
 
 // Base type
-base_type = "SEPARATE";  // [SEPARATE: "Separate base for every stand", COMMON: "Common base for all stands"]
+base_type = "SEPARATE";  // [SEPARATE:"Separate base for every stand", COMMON:"Common base for all stands"]
 
 /* [Fan] */
 // Fan diameter
@@ -56,7 +58,7 @@ pipe_radius = bottleneck_diameter / 3;
 feed_width = (pipe_radius - wall_thickness) * 2;
 feed_radius = feed_width / 2;
 flow_gate_height = min(feed_width, support_height - wall_thickness * 2);
-fan_box_height = flow_gate_height + wall_thickness * 2;
+fan_box_height = base_thickness + flow_gate_height + wall_thickness * 2;
 fan_box_top = fan_box_height + fan_plate_thickness;
 fan_radius = fan_diameter / 2;
 
@@ -99,8 +101,7 @@ module main_part() {
         cylinder(fan_box_top, r = fan_radius);
         intersection() {
           translate(-[ fan_radius, fan_radius, 0 ]) cube([
-            fan_diameter, fan_diameter, wall_thickness + fan_box_height +
-            fan_plate_thickness
+            fan_diameter, fan_diameter, fan_box_height + fan_plate_thickness
           ]);
 
           cylinder(fan_box_top, fan_radius, (fan_radius)*sqrt(2));
@@ -108,12 +109,13 @@ module main_part() {
 
         // Common Base
         if (base_type == "COMMON") {
-          linear_extrude(wall_thickness) common_base();
-          linear_extrude(bank_height) shell(wall_thickness) common_base();
+          linear_extrude(base_thickness) common_base();
+          linear_extrude(base_thickness + bank_height) shell(wall_thickness)
+              common_base();
         }
       }
       // Air flow
-      up(wall_thickness) {
+      up(base_thickness) {
         cylinder(fan_box_top + epsilon, r = fan_radius - wall_thickness);
 
         for (i = [0:stand_count - 1]) {
@@ -131,7 +133,7 @@ module main_part() {
       }
     }
     // Air direction
-    up(wall_thickness) difference() {
+    up(base_thickness) difference() {
       cylinder(fan_box_height, r = fan_radius - epsilon);
       rotate_extrude() translate([ fan_radius + epsilon, fan_box_height, 0 ])
           scale([ 1, fan_box_height / fan_radius ]) circle(fan_radius);
@@ -143,8 +145,9 @@ module stand(feed_length = 100) {
   difference() {
     union() {
       // The pipe
-      cylinder(bottle_height + support_height, r = pipe_radius);
-      up(bottle_height + support_height) rotate_extrude()
+      up(base_thickness)
+          cylinder(bottle_height + support_height, r = pipe_radius);
+      up(base_thickness + bottle_height + support_height) rotate_extrude()
           right(pipe_radius - wall_thickness / 2) circle(wall_thickness / 2);
       // Bottle neck spacers
       up(support_height) {
@@ -166,7 +169,7 @@ module stand(feed_length = 100) {
       }
 
       // Support
-      intersection() {
+      up(base_thickness) intersection() {
         for (phi = [360 / (support_count * 2):360 /
                  support_count:360 - epsilon]) {
           rotate(phi) back(support_thickness / 2) xrot(90)
@@ -184,30 +187,35 @@ module stand(feed_length = 100) {
 
       // Feed shell
       fwd(feed_radius + wall_thickness) rotate([ 90, 0, 90 ])
-          linear_extrude(feed_length) gate([
-            feed_width + wall_thickness * 2,
-            min(feed_width + wall_thickness * 2, support_height)
-          ]);
+          linear_extrude(feed_length) union() {
+        back(base_thickness) gate([
+          feed_width + wall_thickness * 2,
+          min(feed_width + wall_thickness + base_thickness, support_height)
+        ]);
+        square([ feed_width + wall_thickness * 2, base_thickness ]);
+      }
 
       // Separate Base
       if (base_type == "SEPARATE") {
-        cylinder(wall_thickness, r = support_radius + wall_thickness * 2);
+        cylinder(base_thickness, r = support_radius + wall_thickness * 2);
         difference() {
-          cylinder(bank_height, r = support_radius + wall_thickness * 2);
-          cylinder(bank_height + epsilon,
-                   r = support_radius + wall_thickness - bank_height / 2);
-          up(wall_thickness + bank_height / 2) rotate_extrude()
-              right(support_radius - wall_thickness) circle(bank_height / 2);
+          cylinder(base_thickness + bank_height,
+                   r = support_radius + wall_thickness * 2);
+          cylinder(base_thickness + bank_height + epsilon,
+                   r = support_radius - (bank_height) / 2);
+          up(base_thickness + bank_height) rotate_extrude()
+              right(support_radius - wall_thickness - bank_height / 2)
+                  circle(bank_height);
         }
-        up(bank_height) rotate_extrude()
+        up(base_thickness + bank_height) rotate_extrude()
             right(support_radius + wall_thickness * 1.5)
                 circle(wall_thickness / 2);
       }
     }
     // Air flow
-    up(wall_thickness) {
+    up(base_thickness) {
       // Pipe
-      cylinder(bottle_height + support_height,
+      cylinder(bottle_height + support_height + epsilon,
                r = pipe_radius - wall_thickness);
       // Feed
       fwd(feed_radius) rotate([ 90, 0, 90 ])
@@ -216,7 +224,7 @@ module stand(feed_length = 100) {
     }
   }
   // Air direction
-  difference() {
+  up(base_thickness) difference() {
     intersection() {
       cylinder(feed_radius, r = feed_radius);
       translate([ -feed_width, -feed_radius ])
@@ -240,13 +248,13 @@ module cap() {
 }
 
 module common_base() {
-    conv_hull() union() {
-      for (i = [0:stand_count - 1]) {
-        rotate(i * 360 / stand_count) translate([ feed_length, 0, 0 ])
-            circle(r = support_radius + wall_thickness * 2);
-        circle((fan_radius + wall_thickness) * sqrt(2));
-      }
+  conv_hull() union() {
+    for (i = [0:stand_count - 1]) {
+      rotate(i * 360 / stand_count) translate([ feed_length, 0, 0 ])
+          circle(r = support_radius + wall_thickness * 2);
+      circle((fan_radius + wall_thickness) * sqrt(2));
     }
+  }
 }
 
 // Creates a pointed arch.
