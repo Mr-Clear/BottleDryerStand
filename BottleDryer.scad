@@ -1,4 +1,3 @@
-include <BOSL2/std.scad>
 include <scad-utils/morphology.scad>
 
 /* [General] */
@@ -269,4 +268,19 @@ module gate(size, pointiness = 0) {
     translate(m) circle(r);
     square([ size[0] / 2, size[1] ]);
   }
+}
+
+module xrot(angle) { rotate([ angle, 0, 0 ]) children(); }
+module yrot(angle) { rotate([ 0, angle, 0 ]) children(); }
+module zrot(angle) { rotate([ 0, 0, angle ]) children(); }
+module fwd(y) { translate([ 0, -y, 0 ]) children(); }
+module back(y) { translate([ 0, y, 0 ]) children(); }
+module up(z) { translate([ 0, 0, z ]) children(); }
+module down(z) { translate([ 0, 0, -z ]) children(); }
+module left(x) { translate([ -x, 0, 0 ]) children(); }
+module right(x) { translate([ x, 0, 0 ]) children(); }
+
+module mirror_copy(vec) {
+  children();
+  mirror(vec) children();
 }
