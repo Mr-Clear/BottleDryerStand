@@ -4,8 +4,7 @@ include <scad-utils/morphology.scad>
 // Resolution (higer is better)
 $fn = 0;
 // The part to be printed
-part = "ALL";  // [ALL:"All (Not printable!)", MAIN:"Main Stand", FAN:"Fan
-// Holder", CAP:"Cap to block air"]
+part = "MAIN";  // [ALL:"All (Not printable!)", MAIN:"Main Stand", CAP:"Cap to block air"]
 // Thickness of all air flow walls
 wall_thickness = 1;  // [0.1:0.01:5]
 // Space between seperate printed parts to fit together
@@ -41,8 +40,9 @@ support_height = 20;    // [10:1:100]
 /* [Hidden] */
 epsilon = 0.001;
 
-feed_length = max(stand_distance * stand_count / (2 * PI),
-                  (stand_distance + fan_diameter) / 2 + wall_thickness);
+feed_length =
+    max(stand_distance * stand_count / (2 * PI),
+        (fan_diameter * sqrt(2) + support_diameter) / 2 + wall_thickness * 2);
 
 bottleneck_radius = bottleneck_diameter / 2;
 pipe_radius = bottleneck_diameter / 3;
@@ -153,52 +153,49 @@ module stand(feed_length = 100) {
 }
 
 module main_part() {
-  difference() {
-    union() {
-      // Stands
-      for (i = [0:stand_count - 1]) {
-        rotate(i * 360 / stand_count) translate([ feed_length, 0, 0 ])
-            rotate([ 0, 0, 180 ]) stand(feed_length);
-      }
-      // Fan Box
-      cylinder(fan_box_top, r = fan_radius + wall_thickness - print_accuracy);
-      intersection() {
-        translate(
-            -[ fan_radius + wall_thickness, fan_radius + wall_thickness, 0 ])
-            cube([
-              fan_diameter + wall_thickness * 2,
-              fan_diameter + wall_thickness * 2,
-              wall_thickness + fan_box_height +
-              fan_plate_thickness
-            ]);
+  union() {
+    difference() {
+      union() {
+        // Stands
+        for (i = [0:stand_count - 1]) {
+          rotate(i * 360 / stand_count) translate([ feed_length, 0, 0 ])
+              rotate([ 0, 0, 180 ]) stand(feed_length);
+        }
+        // Fan Box
+        cylinder(fan_box_top, r = fan_radius);
+        intersection() {
+          translate(-[ fan_radius, fan_radius, 0 ]) cube([
+            fan_diameter, fan_diameter, wall_thickness + fan_box_height +
+            fan_plate_thickness
+          ]);
 
-        cylinder(fan_box_top, fan_radius + wall_thickness,
-                 (fan_radius + wall_thickness) * sqrt(2));
-      }
-    }
-    // Air flow
-    up(wall_thickness) {
-      cylinder(fan_box_top + epsilon, r = fan_radius - print_accuracy);
-
-      for (i = [0:stand_count - 1]) {
-        rotate(i * 360 / stand_count) {
-          fwd(feed_radius) rotate([ 90, 0, 90 ])
-              linear_extrude(fan_diameter + epsilon)
-                  gate([ feed_width, flow_gate_height ]);
+          cylinder(fan_box_top, fan_radius, (fan_radius)*sqrt(2));
         }
       }
+      // Air flow
+      up(wall_thickness) {
+        cylinder(fan_box_top + epsilon, r = fan_radius - wall_thickness);
+
+        for (i = [0:stand_count - 1]) {
+          rotate(i * 360 / stand_count) {
+            fwd(feed_radius) rotate([ 90, 0, 90 ])
+                linear_extrude(fan_diameter + epsilon)
+                    gate([ feed_width, flow_gate_height ]);
+          }
+        }
+      }
+      // Screw holes
+      up(fan_box_top - fan_plate_thickness + epsilon) for (phi = [45:90:360]) {
+        zrot(phi) translate([ fan_screw_radius, 0, 0 ])
+            cylinder(fan_plate_thickness, r = fan_screw_diameter / 2);
+      }
     }
-    // Screw holes
-    up(fan_box_top - epsilon) for (phi = [45:90:360]) {
-      zrot(phi) translate([ fan_screw_radius, 0, 0 ])
-          cylinder(fan_plate_thickness, r = fan_screw_diameter / 2);
+    // Air direction
+    up(wall_thickness) difference() {
+      cylinder(fan_box_height, r = fan_radius - epsilon);
+      rotate_extrude() translate([ fan_radius + epsilon, fan_box_height, 0 ])
+          scale([ 1, fan_box_height / fan_radius ]) circle(fan_radius);
     }
-  }
-  // Air direction
-  up(wall_thickness) difference() {
-    cylinder(fan_box_height, r = fan_radius - epsilon);
-    rotate_extrude() translate([ fan_radius, fan_box_height, 0 ])
-        scale([ 1, fan_box_height / fan_radius ]) circle(fan_radius);
   }
 }
 
@@ -209,7 +206,6 @@ if (part == "ALL") {
 } else if (part == "MAIN") {
   main_part();
 } else if (part == "CAP") {
-  translate([ 0, 0, fan_box_height / 2 + wall_thickness * 2 ]) cap();
 } else {
   echo("Unknown part: ", part);
 }
