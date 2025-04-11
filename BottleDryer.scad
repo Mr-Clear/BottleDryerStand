@@ -207,8 +207,9 @@ module stand(feed_length = 100) {
               right(support_radius + wall_thickness - bank_height)
                   circle(bank_height);
         }
-#up(base_thickness + bank_height) rotate_extrude()
-        right(support_radius + wall_thickness * 1.5) circle(wall_thickness / 2);
+        up(base_thickness + bank_height) rotate_extrude()
+            right(support_radius + wall_thickness * 1.5)
+                circle(wall_thickness / 2);
       }
     }
     // Air flow
