@@ -1,12 +1,50 @@
 A bottle dryer stand that can be equipped with a PC fan to support drying.
 
-Can be printed without supports -
 [GitHub](https://github.com/Mr-Clear/BottleDryerStand) -
 [Printables](https://www.printables.com/model/1262046-customizable-bottle-dryer-stand-with-fan) -
 [Thingiverse](https://www.thingiverse.com/thing:7006996) -
 Made with [OpenSCAD 2025.04.10](https://openscad.org/downloads.html#snapshots)
 
-![5](BottleDryer_5Arms_40mmFan_SeparateBase.png)
+![](images/BottleDryer_5Arms_40mmFan_SeparateBase_Big.png)
+
+With separate bases:
+
+![](images/BottleDryer_1Arms_40mmFan_SeparateBase.png)
+![](images/BottleDryer_2Arms_40mmFan_SeparateBase.png)
+![](images/BottleDryer_3Arms_40mmFan_SeparateBase.png)
+![](images/BottleDryer_4Arms_40mmFan_SeparateBase.png)
+![](images/BottleDryer_5Arms_40mmFan_SeparateBase.png)
+![](images/BottleDryer_6Arms_40mmFan_SeparateBase.png)
+![](images/BottleDryer_7Arms_40mmFan_SeparateBase.png)
+![](images/BottleDryer_8Arms_40mmFan_SeparateBase.png)
+![](images/BottleDryer_9Arms_40mmFan_SeparateBase.png)
+![](images/BottleDryer_10Arms_40mmFan_SeparateBase.png)
+
+With common base:
+
+![](images/BottleDryer_1Arms_40mmFan_CommonBase.png)
+![](images/BottleDryer_2Arms_40mmFan_CommonBase.png)
+![](images/BottleDryer_3Arms_40mmFan_CommonBase.png)
+![](images/BottleDryer_4Arms_40mmFan_CommonBase.png)
+![](images/BottleDryer_5Arms_40mmFan_CommonBase.png)
+![](images/BottleDryer_6Arms_40mmFan_CommonBase.png)
+![](images/BottleDryer_7Arms_40mmFan_CommonBase.png)
+![](images/BottleDryer_8Arms_40mmFan_CommonBase.png)
+![](images/BottleDryer_9Arms_40mmFan_CommonBase.png)
+![](images/BottleDryer_10Arms_40mmFan_CommonBase.png)
+
+Different fan sizes:
+
+![](images/BottleDryer_5Arms_40mmFan_SeparateBase.png)
+![](images/BottleDryer_5Arms_50mmFan_SeparateBase.png)
+![](images/BottleDryer_5Arms_60mmFan_SeparateBase.png)
+![](images/BottleDryer_5Arms_70mmFan_SeparateBase.png)
+![](images/BottleDryer_5Arms_80mmFan_SeparateBase.png)
+![](images/BottleDryer_5Arms_92mmFan_SeparateBase.png)
+![](images/BottleDryer_5Arms_120mmFan_SeparateBase.png)
+![](images/BottleDryer_5Arms_140mmFan_SeparateBase.png)
+![](images/BottleDryer_5Arms_200mmFan_SeparateBase.png)
+![](images/BottleDryer_5Arms_220mmFan_SeparateBase.png)
 
 # Customize
 Measure how wide your fattest bottle is, how long your smallest bottle is, how close the bottle neck of your tightest bottle and how wide the opening of your widest bottle is.
